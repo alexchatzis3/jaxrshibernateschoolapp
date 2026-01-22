@@ -15,25 +15,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Utility class for mapping between entities and DTOs.
+ * Utility class for mapping between domain entities and DTOs.
  *
- * <p>This class contains static methods to convert between domain models
- * (Teacher, Student, Course) and their corresponding Data Transfer Objects (DTOs)
- * for use in REST APIs or service layers.</p>
+ * <p>This class provides static methods to convert entities (Teacher, Student, Course, User)
+ * to their corresponding Data Transfer Objects (DTOs) for REST responses or service layers.
  *
- * <p>All methods are static and the class cannot be instantiated.</p>
+ * <p>It also provides mapping from filter DTOs to criteria maps for dynamic queries.
+ *
+ * <p>This class cannot be instantiated; all methods are static.
  */
 public class Mapper {
 
-    /** Private constructor to prevent instantiation. */
+    /** Private constructor to prevent instantiation */
     private Mapper() {}
 
-    // ===================== Teacher mappings ===================== //
+    // ===================== TEACHER ===================== //
 
     /**
-     * Maps a {@link TeacherInsertDTO} to a {@link Teacher} entity.
+     * Converts a TeacherInsertDTO to a Teacher entity.
      *
-     * @param insertDTO the DTO containing teacher information
+     * @param insertDTO the input DTO
      * @return a new Teacher entity
      */
     public static Teacher mapToTeacher(TeacherInsertDTO insertDTO) {
@@ -41,46 +42,50 @@ public class Mapper {
     }
 
     /**
-     * Maps a {@link TeacherUpdateDTO} to a {@link Teacher} entity.
+     * Converts a TeacherUpdateDTO to a Teacher entity.
      *
-     * @param updateDTO the DTO containing updated teacher information
-     * @return a Teacher entity with the provided id
+     * @param updateDTO the input DTO
+     * @return a Teacher entity with the given ID
      */
     public static Teacher mapToTeacher(TeacherUpdateDTO updateDTO) {
         return new Teacher(updateDTO.getId(), updateDTO.getVat(), updateDTO.getFirstname(), updateDTO.getLastname());
     }
 
     /**
-     * Maps a {@link Teacher} entity to a read-only DTO.
+     * Converts a Teacher entity to a read-only DTO.
      *
-     * @param teacher the teacher entity
-     * @return a {@link TeacherReadOnlyDTO} containing teacher info
+     * @param teacher entity
+     * @return TeacherReadOnlyDTO
      */
     public static TeacherReadOnlyDTO mapToTeacherReadOnlyDTO(Teacher teacher) {
-        return new TeacherReadOnlyDTO(teacher.getId(), teacher.getVat(), teacher.getFirstname(), teacher.getLastname());
+        return new TeacherReadOnlyDTO(
+                teacher.getId(),
+                teacher.getVat(),
+                teacher.getFirstname(),
+                teacher.getLastname()
+        );
     }
 
     /**
      * Converts a list of Teacher entities to a list of read-only DTOs.
      *
-     * @param teachers the list of Teacher entities
-     * @return list of {@link TeacherReadOnlyDTO}
+     * @param teachers list of entities
+     * @return list of TeacherReadOnlyDTO
      */
     public static List<TeacherReadOnlyDTO> teachersToReadOnlyDTOs(List<Teacher> teachers) {
         return teachers.stream().map(Mapper::mapToTeacherReadOnlyDTO).collect(Collectors.toList());
     }
 
-    // ===================== Criteria mappers ===================== //
+    // ===================== FILTER CRITERIA ===================== //
 
     /**
-     * Maps TeacherFiltersDTO to a criteria map for dynamic queries.
+     * Maps TeacherFiltersDTO to a criteria map for queries.
      *
-     * @param filtersDTO filters for teachers
+     * @param filtersDTO the filter DTO
      * @return map of non-null criteria
      */
     public static Map<String, Object> mapToCriteria(TeacherFiltersDTO filtersDTO) {
         Map<String, Object> filters = new HashMap<>();
-
         if (filtersDTO.getFirstname() != null && !filtersDTO.getFirstname().isEmpty()) {
             filters.put("firstname", filtersDTO.getFirstname());
         }
@@ -90,38 +95,34 @@ public class Mapper {
         if (filtersDTO.getVat() != null && !filtersDTO.getVat().isEmpty()) {
             filters.put("vat", filtersDTO.getVat());
         }
-
         return filters;
     }
 
     /**
-     * Maps CourseFiltersDTO to a criteria map for dynamic queries.
+     * Maps CourseFiltersDTO to a criteria map for queries.
      *
-     * @param filtersDTO filters for courses
+     * @param filtersDTO the filter DTO
      * @return map of non-null criteria
      */
     public static Map<String, Object> mapToCriteria(CourseFiltersDTO filtersDTO) {
         Map<String, Object> filters = new HashMap<>();
-
         if (filtersDTO.getTitle() != null && !filtersDTO.getTitle().isEmpty()) {
             filters.put("title", filtersDTO.getTitle());
         }
         if (filtersDTO.getTeacherId() != null) {
             filters.put("teacherId", filtersDTO.getTeacherId());
         }
-
         return filters;
     }
 
     /**
-     * Maps StudentFiltersDTO to a criteria map for dynamic queries.
+     * Maps StudentFiltersDTO to a criteria map for queries.
      *
-     * @param filtersDTO filters for students
+     * @param filtersDTO the filter DTO
      * @return map of non-null criteria
      */
     public static Map<String, Object> mapToCriteria(StudentFiltersDTO filtersDTO) {
         Map<String, Object> filters = new HashMap<>();
-
         if (filtersDTO.getFirstname() != null && !filtersDTO.getFirstname().isEmpty()) {
             filters.put("firstname", filtersDTO.getFirstname());
         }
@@ -131,17 +132,16 @@ public class Mapper {
         if (filtersDTO.getEmail() != null && !filtersDTO.getEmail().isEmpty()) {
             filters.put("email", filtersDTO.getEmail());
         }
-
         return filters;
     }
 
-    // ===================== Student mappings ===================== //
+    // ===================== STUDENT ===================== //
 
     /**
-     * Maps a {@link StudentInsertDTO} to a {@link Student} entity with courses.
+     * Maps StudentInsertDTO to a Student entity with courses.
      *
-     * @param dto student insert DTO
-     * @param courses set of course entities
+     * @param dto input DTO
+     * @param courses associated courses
      * @return new Student entity
      */
     public static Student mapToStudent(StudentInsertDTO dto, Set<Course> courses) {
@@ -154,10 +154,10 @@ public class Mapper {
     }
 
     /**
-     * Maps a {@link StudentUpdateDTO} to a {@link Student} entity with courses.
+     * Maps StudentUpdateDTO to a Student entity with courses.
      *
-     * @param dto student update DTO
-     * @param courses set of course entities
+     * @param dto input DTO
+     * @param courses associated courses
      * @return updated Student entity
      */
     public static Student mapToStudent(StudentUpdateDTO dto, Set<Course> courses) {
@@ -171,10 +171,10 @@ public class Mapper {
     }
 
     /**
-     * Maps a Student entity to a read-only DTO.
+     * Converts a Student entity to a read-only DTO.
      *
-     * @param student student entity
-     * @return {@link StudentReadOnlyDTO} containing student info and course titles
+     * @param student entity
+     * @return StudentReadOnlyDTO with course titles
      */
     public static StudentReadOnlyDTO mapToStudentReadOnlyDTO(Student student) {
         StudentReadOnlyDTO dto = new StudentReadOnlyDTO();
@@ -182,20 +182,19 @@ public class Mapper {
         dto.setFirstname(student.getFirstname());
         dto.setLastname(student.getLastname());
         dto.setEmail(student.getEmail());
-        dto.setCourseTitles(student.getCourses()
-                .stream()
+        dto.setCourseTitles(student.getCourses().stream()
                 .map(Course::getTitle)
                 .collect(Collectors.toSet()));
         return dto;
     }
 
-    // ===================== Course mappings ===================== //
+    // ===================== COURSE ===================== //
 
     /**
-     * Maps a {@link CourseInsertDTO} to a {@link Course} entity with the given teacher.
+     * Maps CourseInsertDTO to a Course entity with teacher.
      *
-     * @param dto course insert DTO
-     * @param teacher teacher entity assigned to course
+     * @param dto input DTO
+     * @param teacher assigned teacher
      * @return new Course entity
      */
     public static Course mapToCourse(CourseInsertDTO dto, Teacher teacher) {
@@ -206,11 +205,11 @@ public class Mapper {
     }
 
     /**
-     * Maps a {@link CourseUpdateDTO} to an existing {@link Course} entity.
+     * Updates an existing Course entity from a CourseUpdateDTO.
      *
-     * @param dto course update DTO
-     * @param teacher teacher entity assigned to course
-     * @param existing existing Course entity to update
+     * @param dto input DTO
+     * @param teacher assigned teacher
+     * @param existing existing course entity
      * @return updated Course entity
      */
     public static Course mapToCourse(CourseUpdateDTO dto, Teacher teacher, Course existing) {
@@ -220,26 +219,50 @@ public class Mapper {
     }
 
     /**
-     * Maps a Course entity to a read-only DTO.
+     * Converts a Course entity to a read-only DTO.
      *
-     * @param course course entity
-     * @return {@link CourseReadOnlyDTO} with course info and teacher name
+     * @param course entity
+     * @return CourseReadOnlyDTO with teacher name
      */
     public static CourseReadOnlyDTO mapToCourseReadOnlyDTO(Course course) {
         CourseReadOnlyDTO dto = new CourseReadOnlyDTO();
         dto.setId(course.getId());
         dto.setTitle(course.getTitle());
-        dto.setTeacherName(course.getTeacher() != null ?
-                course.getTeacher().getFirstname() + " " + course.getTeacher().getLastname() : null);
+        dto.setTeacherName(course.getTeacher() != null
+                ? course.getTeacher().getFirstname() + " " + course.getTeacher().getLastname()
+                : null);
         return dto;
     }
 
+    // ===================== USER ===================== //
 
+    /**
+     * Maps UserInsertDTO to a User entity with hashed password.
+     *
+     * @param dto input DTO
+     * @return new User entity
+     */
     public static User mapToUser(UserInsertDTO dto) {
-        return new User(null, dto.getUsername(), SecUtil.hashPassword(dto.getPassword()), RoleType.valueOf(dto.getRole()));
+        return new User(
+                null,
+                dto.getUsername(),
+                SecUtil.hashPassword(dto.getPassword()),
+                RoleType.valueOf(dto.getRole())
+        );
     }
 
+    /**
+     * Converts a User entity to a read-only DTO.
+     *
+     * @param user entity
+     * @return UserReadOnlyDTO
+     */
     public static UserReadOnlyDTO mapToUserReadOnlyDTO(User user) {
-        return new UserReadOnlyDTO(user.getId(), user.getUsername(), user.getPassword(), user.getRoleType().name());
+        return new UserReadOnlyDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getRoleType().name()
+        );
     }
 }
