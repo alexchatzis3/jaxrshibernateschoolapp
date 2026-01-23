@@ -13,10 +13,7 @@ import gr.aueb.cf.schoolapp.validator.ValidatorUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.*;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -28,6 +25,9 @@ import java.util.Map;
  * <p>Exposes CRUD and filtering operations for teachers via HTTP endpoints.
  * Performs validation using {@link ValidatorUtil} and delegates business logic
  * to {@link ITeacherService}.</p>
+ *
+ * <p>Security checks are done using {@link SecurityContext} to restrict access to ADMIN or TEACHER roles.</p>
+ *
  */
 @ApplicationScoped
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
@@ -73,6 +73,8 @@ public class TeacherRestController {
     /**
      * Updates an existing teacher.
      *
+     * <p>Requires ADMIN role. Validates input DTO and delegates update to the service layer.</p>
+     *
      * @param teacherId ID of the teacher to update
      * @param updateDTO updated teacher data
      * @return HTTP 200 OK with updated teacher DTO
@@ -83,8 +85,14 @@ public class TeacherRestController {
     @Path("/{teacherId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateTeacher(@PathParam("teacherId") Long teacherId, TeacherUpdateDTO updateDTO)
+    public Response updateTeacher(@PathParam("teacherId") Long teacherId, TeacherUpdateDTO updateDTO,
+                                  @Context SecurityContext securityContext)
             throws EntityInvalidArgumentException, EntityNotFoundException {
+
+        // Only ADMIN can update
+        if (!securityContext.isUserInRole("ADMIN")) {
+            return  Response.status(Response.Status.UNAUTHORIZED).build();
+        }
 
         // Validate DTO fields
         List<String> errors = ValidatorUtil.validateDTO(updateDTO);
@@ -101,6 +109,8 @@ public class TeacherRestController {
     /**
      * Deletes a teacher by ID.
      *
+     * <p>Requires ADMIN role. Retrieves teacher before deletion to return its details in response.</p>
+     *
      * @param teacherId ID of the teacher to delete
      * @return HTTP 200 OK with the deleted teacher DTO
      * @throws EntityNotFoundException if the teacher does not exist
@@ -108,8 +118,14 @@ public class TeacherRestController {
     @DELETE
     @Path("/{teacherId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteTeacher(@PathParam("teacherId") Long teacherId)
+    public Response deleteTeacher(@PathParam("teacherId") Long teacherId,
+                                  @Context SecurityContext securityContext)
             throws EntityNotFoundException {
+
+        // Only ADMIN can delete
+        if (!securityContext.isUserInRole("ADMIN")) {
+            return  Response.status(Response.Status.UNAUTHORIZED).build();
+        }
 
         // Retrieve teacher before deletion for response
         TeacherReadOnlyDTO readOnlyDTO = teacherService.getTeacherById(teacherId);
@@ -123,6 +139,8 @@ public class TeacherRestController {
     /**
      * Retrieves a teacher by ID.
      *
+     * <p>Accessible by ADMIN and TEACHER roles.</p>
+     *
      * @param id teacher ID
      * @return HTTP 200 OK with teacher DTO
      * @throws EntityNotFoundException if the teacher does not exist
@@ -130,15 +148,22 @@ public class TeacherRestController {
     @GET
     @Path("/{teacherId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getTeacher(@PathParam("teacherId") Long id)
+    public Response getTeacher(@PathParam("teacherId") Long id,
+                               @Context SecurityContext securityContext)
             throws EntityNotFoundException {
 
+        // Only ADMIN or TEACHER can read
+        if (!securityContext.isUserInRole("TEACHER") && (!securityContext.isUserInRole("ADMIN"))) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
         TeacherReadOnlyDTO readOnlyDTO = teacherService.getTeacherById(id);
         return Response.ok(readOnlyDTO).build();
     }
 
     /**
      * Retrieves teachers filtered by optional query parameters.
+     *
+     * <p>Accessible by ADMIN and TEACHER roles.</p>
      *
      * @param firstname optional first name filter
      * @param lastname  optional last name filter
@@ -149,7 +174,13 @@ public class TeacherRestController {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getFiltered(@QueryParam("firstname") String firstname,
                                 @QueryParam("lastname") String lastname,
-                                @QueryParam("vat") String vat) {
+                                @QueryParam("vat") String vat,
+                                @Context SecurityContext securityContext) {
+
+        // Only ADMIN or TEACHER can filter
+        if (!securityContext.isUserInRole("TEACHER") && (!securityContext.isUserInRole("ADMIN"))) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
 
         // Build filter DTO from query parameters
         TeacherFiltersDTO filtersDTO = new TeacherFiltersDTO(firstname, lastname, vat);

@@ -26,7 +26,7 @@ import java.util.function.Function;
 public class JwtService {
 
     /** Secret key used to sign the JWT. Must be kept safe and secure. */
-    private String secretKey = System.getenv("SECRET_KEY");
+    private String secretKey =  "5ce98d378ec88ea09ba8bcd511ef23645f04cc8e70b9134b98723a53c275bbc5";
 
     /** JWT expiration time in milliseconds (default 3 hours). */
     private long jwtExpiration = 10800000;
