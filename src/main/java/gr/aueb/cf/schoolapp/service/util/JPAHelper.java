@@ -4,6 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import java.util.Properties;
+
 /**
  * Utility class for managing JPA {@link EntityManager} and transactions.
  *
@@ -26,13 +28,32 @@ public final class JPAHelper {
 
     /**
      * Returns the singleton {@link EntityManagerFactory}.
-     * Creates it if it does not exist or is closed.
+     * <p>If the factory does not exist or is closed, it is created using
+     * the specified database connection properties. The database password
+     * is read from the environment variable "PASS_DB6".</p>
      *
-     * @return the {@link EntityManagerFactory}
+     * @return the {@link EntityManagerFactory} instance
+     * @throws RuntimeException if the "PASS_DB6" environment variable is not set
      */
     public static EntityManagerFactory getEntityManagerFactory() {
         if (emf == null || !emf.isOpen()) {
-            emf = Persistence.createEntityManagerFactory("schoolPU");
+            Properties props = new Properties();
+
+            // Database user
+            props.setProperty("hibernate.hikari.dataSource.user", "schooluser");
+
+            // Database password from environment variable
+            String dbPassword = System.getenv("PASS_DB6");
+            if (dbPassword == null) {
+                throw new RuntimeException("PASS_DB6 environment variable is not set");
+            }
+            props.setProperty("hibernate.hikari.dataSource.password", dbPassword);
+
+            // Database URL
+            props.setProperty("hibernate.hikari.dataSource.url", "jdbc:mysql://localhost:3306/schooljaxrshiberdb?serverTimezone=UTC");
+
+            // Create the EntityManagerFactory with the specified properties
+            emf = Persistence.createEntityManagerFactory("schoolPU", props);
         }
         return emf;
     }

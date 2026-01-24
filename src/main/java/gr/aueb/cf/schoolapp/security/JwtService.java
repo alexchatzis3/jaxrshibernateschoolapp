@@ -8,6 +8,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,10 +27,21 @@ import java.util.function.Function;
 public class JwtService {
 
     /** Secret key used to sign the JWT. Must be kept safe and secure. */
-    private String secretKey =  "5ce98d378ec88ea09ba8bcd511ef23645f04cc8e70b9134b98723a53c275bbc5";
+    private final String SECRET_KEY;
 
     /** JWT expiration time in milliseconds (default 3 hours). */
     private long jwtExpiration = 10800000;
+
+    /**
+     * Constructor reads the secret key from the environment variable.
+     */
+    public JwtService() {
+        SECRET_KEY = System.getenv("SECRET_KEY");
+        if (SECRET_KEY == null || SECRET_KEY.isEmpty()) {
+            throw new RuntimeException("SECRET_KEY is not set");
+        }
+    }
+
 
     /**
      * Generates a JWT token for the given username and role.
@@ -118,7 +130,8 @@ public class JwtService {
      * @return a {@link Key} used to sign and validate JWT tokens
      */
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
 }
